@@ -2,8 +2,6 @@ import warnings
 import logging
 import asyncio
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from auth import APIKeyMiddleware
 from pdf2image import convert_from_bytes
 from io import BytesIO
@@ -17,13 +15,6 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 app.add_middleware(APIKeyMiddleware)
-
-templates = Jinja2Templates(directory=".")
-
-@app.get("/", response_class=HTMLResponse)
-async def get_frontend():
-    return templates.TemplateResponse("index.html", {"request": {}})
-
 
 async def convert_whole_pdf(pdf_content: bytes, page_numbers: list[int]):
     """
@@ -45,7 +36,6 @@ async def convert_whole_pdf(pdf_content: bytes, page_numbers: list[int]):
         logger.error(f"Error in convert_whole_pdf: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 async def convert_single_page(pdf_content: bytes, page: int):
     """
     Convert a single PDF page to an image and return it as a Base64 string.
@@ -63,7 +53,6 @@ async def convert_single_page(pdf_content: bytes, page: int):
     except Exception as e:
         logger.error(f"Error processing page {page}: {e}")
         return {}
-
 
 async def convert_each_page(pdf_content: bytes, page_numbers: list[int]):
     """
@@ -86,6 +75,9 @@ async def convert_each_page(pdf_content: bytes, page_numbers: list[int]):
         logger.error(f"Error in convert_each_page: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/")
+async def get_frontend():
+    return {"message": "Hello World"}
 
 @app.post("/convert_pdf")
 async def convert_pdf_to_images(
